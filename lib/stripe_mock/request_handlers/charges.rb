@@ -9,6 +9,7 @@ module StripeMock
         klass.add_handler 'post /v1/charges/(.*)/capture',  :capture_charge
         klass.add_handler 'post /v1/charges/(.*)/refund',   :refund_charge
         klass.add_handler 'post /v1/charges/(.*)/refunds',  :create_refund
+        klass.add_handler 'post /v1/refunds',               :create_refund
         klass.add_handler 'post /v1/charges/(.*)',          :update_charge
       end
 
