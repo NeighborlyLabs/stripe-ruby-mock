@@ -9,7 +9,7 @@ module StripeMock
         klass.add_handler 'post /v1/charges/(.*)/capture',  :capture_charge
         klass.add_handler 'post /v1/charges/(.*)/refund',   :refund_charge
         klass.add_handler 'post /v1/charges/(.*)/refunds',  :create_refund
-        klass.add_handler 'post /v1/refunds',               :create_refund
+        klass.add_handler 'post /v1/refunds',               :create_refund_refund
         klass.add_handler 'post /v1/charges/(.*)',          :update_charge
       end
 
@@ -103,6 +103,16 @@ module StripeMock
           :charge => charge[:id]
         )
         add_refund_to_charge(refund, charge)
+        refund
+      end
+
+      def create_refund_refund(route, method_url, params, headers)
+        refund = Data.mock_refund params.merge(
+          :balance_transaction => new_balance_transaction('txn'),
+          :id => new_id('re'),
+          :charge => params[:charge]
+        )
+        add_refund_to_charge(refund, charges[params[:charge]])
         refund
       end
 
