@@ -12,7 +12,7 @@ This gem has unexpectedly grown in popularity and I've gotten pretty busy, so I'
 
 In your gemfile:
 
-    gem 'stripe-ruby-mock', '~> 2.2.1', :require => 'stripe_mock'
+    gem 'stripe-ruby-mock', '~> 2.3.0', :require => 'stripe_mock'
 
 ## Features
 
@@ -291,6 +291,12 @@ it "mocks a stripe webhook" do
   expect(customer_object.id).to_not be_nil
   expect(customer_object.default_card).to_not be_nil
   # etc.
+end
+
+it "mocks stripe connect webhooks" do
+  event = StripeMock.mock_webhook_event('customer.created', user_id: 'acc_123123')
+
+  expect(event.user_id).to eq('acc_123123')
 end
 ```
 

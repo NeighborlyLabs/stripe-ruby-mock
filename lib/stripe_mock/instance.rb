@@ -4,6 +4,8 @@ module StripeMock
     include StripeMock::RequestHandlers::Helpers
     include StripeMock::RequestHandlers::ParamValidators
 
+    DUMMY_API_KEY = (0...32).map { (65 + rand(26)).chr }.join.downcase
+
     # Handlers are ordered by priority
     @@handlers = []
 
@@ -19,12 +21,14 @@ module StripeMock
     end
 
     include StripeMock::RequestHandlers::Accounts
+    include StripeMock::RequestHandlers::BalanceTransactions
     include StripeMock::RequestHandlers::Charges
     include StripeMock::RequestHandlers::Cards
     include StripeMock::RequestHandlers::Sources
     include StripeMock::RequestHandlers::Subscriptions # must be before Customers
     include StripeMock::RequestHandlers::Customers
     include StripeMock::RequestHandlers::Coupons
+    include StripeMock::RequestHandlers::Disputes
     include StripeMock::RequestHandlers::Events
     include StripeMock::RequestHandlers::Invoices
     include StripeMock::RequestHandlers::InvoiceItems
@@ -35,19 +39,21 @@ module StripeMock
     include StripeMock::RequestHandlers::Tokens
 
 
-    attr_reader :accounts, :bank_tokens, :charges, :coupons, :customers, :events,
-                :invoices, :invoice_items, :orders, :plans, :recipients, :transfers,
-                :subscriptions
+    attr_reader :accounts, :balance_transactions, :bank_tokens, :charges, :coupons, :customers,
+                :disputes, :events, :invoices, :invoice_items, :orders, :plans, :recipients,
+                :transfers, :subscriptions
 
     attr_accessor :error_queue, :debug
 
     def initialize
       @accounts = {}
+      @balance_transactions = Data.mock_balance_transactions(['txn_05RsQX2eZvKYlo2C0FRTGSSA','txn_15RsQX2eZvKYlo2C0ERTYUIA', 'txn_25RsQX2eZvKYlo2C0ZXCVBNM', 'txn_35RsQX2eZvKYlo2C0QAZXSWE', 'txn_45RsQX2eZvKYlo2C0EDCVFRT', 'txn_55RsQX2eZvKYlo2C0OIKLJUY', 'txn_65RsQX2eZvKYlo2C0ASDFGHJ', 'txn_75RsQX2eZvKYlo2C0EDCXSWQ', 'txn_85RsQX2eZvKYlo2C0UJMCDET', 'txn_95RsQX2eZvKYlo2C0EDFRYUI'])
       @bank_tokens = {}
       @card_tokens = {}
       @customers = {}
       @charges = {}
       @coupons = {}
+      @disputes = Data.mock_disputes(['dp_05RsQX2eZvKYlo2C0FRTGSSA','dp_15RsQX2eZvKYlo2C0ERTYUIA', 'dp_25RsQX2eZvKYlo2C0ZXCVBNM', 'dp_35RsQX2eZvKYlo2C0QAZXSWE', 'dp_45RsQX2eZvKYlo2C0EDCVFRT', 'dp_55RsQX2eZvKYlo2C0OIKLJUY', 'dp_65RsQX2eZvKYlo2C0ASDFGHJ', 'dp_75RsQX2eZvKYlo2C0EDCXSWQ', 'dp_85RsQX2eZvKYlo2C0UJMCDET', 'dp_95RsQX2eZvKYlo2C0EDFRYUI'])
       @events = {}
       @invoices = {}
       @invoice_items = {}
@@ -69,7 +75,7 @@ module StripeMock
     def mock_request(method, url, api_key, params={}, headers={}, api_base_url=nil)
       return {} if method == :xtest
 
-      api_key ||= Stripe.api_key
+      api_key ||= (Stripe.api_key || DUMMY_API_KEY)
 
       # Ensure params hash has symbols as keys
       params = Stripe::Util.symbolize_names(params)

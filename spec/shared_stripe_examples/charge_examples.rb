@@ -65,6 +65,31 @@ shared_examples 'Charge API' do
     expect(charge.status).to eq('succeeded')
   end
 
+  it 'creates a stripe charge item with a customer', :live => true do
+    customer = Stripe::Customer.create({
+      email: 'johnny@appleseed.com',
+      source: stripe_helper.generate_card_token(number: '4012888888881881', address_city: 'LA'),
+      description: "a description"
+    })
+
+    expect(customer.sources.data.length).to eq(1)
+    expect(customer.sources.data[0].id).not_to be_nil
+    expect(customer.sources.data[0].last4).to eq('1881')
+
+    charge = Stripe::Charge.create(
+      amount: 999,
+      currency: 'USD',
+      customer: customer.id,
+      description: 'a charge with a specific customer'
+    )
+
+    expect(charge.id).to match(/^(test_)?ch/)
+    expect(charge.amount).to eq(999)
+    expect(charge.description).to eq('a charge with a specific customer')
+    expect(charge.captured).to eq(true)
+    expect(charge.source.last4).to eq('1881')
+    expect(charge.source.address_city).to eq('LA')
+  end
 
   it "creates a stripe charge item with a customer and card id" do
     customer = Stripe::Customer.create({
@@ -156,6 +181,20 @@ shared_examples 'Charge API' do
     expect(updated.fraud_details.to_hash).to eq(charge.fraud_details.to_hash)
   end
 
+  it "marks a charge as safe" do
+    original = Stripe::Charge.create({
+      amount: 777,
+      currency: 'USD',
+      source: stripe_helper.generate_card_token
+    })
+    charge = Stripe::Charge.retrieve(original.id)
+
+    charge.mark_as_safe
+
+    updated = Stripe::Charge.retrieve(original.id)
+    expect(updated.fraud_details[:user_report]).to eq "safe"
+  end
+
   it "does not lose data when updating a charge" do
     original = Stripe::Charge.create({
       amount: 777,
@@ -185,7 +224,12 @@ shared_examples 'Charge API' do
     charge.amount = 777
     charge.source = {any: "source"}
 
-    expect { charge.save }.to raise_error(Stripe::InvalidRequestError, /Received unknown parameters: currency, amount, source/i)
+    expect { charge.save }.to raise_error(Stripe::InvalidRequestError) do |error|
+      expect(error.message).to match(/Received unknown parameters/)
+      expect(error.message).to match(/currency/)
+      expect(error.message).to match(/amount/)
+      expect(error.message).to match(/source/)
+    end
   end
 
 
@@ -247,7 +291,8 @@ shared_examples 'Charge API' do
             object: 'card',
             number: '4242424242424242',
             exp_month: 12,
-            exp_year: 2024
+            exp_year: 2024,
+            cvc: 123
         }
     )
     12.times do
@@ -321,9 +366,10 @@ shared_examples 'Charge API' do
         capture: false
       })
 
-      returned_charge = charge.capture({ amount: 677 })
+      returned_charge = charge.capture({ amount: 677, application_fee: 123 })
       expect(charge.captured).to eq(true)
       expect(returned_charge.amount_refunded).to eq(100)
+      expect(returned_charge.application_fee).to eq(123)
       expect(returned_charge.id).to eq(charge.id)
       expect(returned_charge.captured).to eq(true)
     end

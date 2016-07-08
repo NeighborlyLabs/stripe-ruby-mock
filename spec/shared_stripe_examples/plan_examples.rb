@@ -9,6 +9,10 @@ shared_examples 'Plan API' do
       :amount => 9900,
       :currency => 'USD',
       :interval => 1,
+      :metadata => {
+        :description => "desc text",
+        :info => "info text"
+      },
       :trial_period_days => 30
     )
 
@@ -18,6 +22,10 @@ shared_examples 'Plan API' do
 
     expect(plan.currency).to eq('USD')
     expect(plan.interval).to eq(1)
+
+    expect(plan.metadata.description).to eq('desc text')
+    expect(plan.metadata.info).to eq('info text')
+
     expect(plan.trial_period_days).to eq(30)
   end
 
@@ -99,6 +107,15 @@ shared_examples 'Plan API' do
     expect(all.count).to eq(2)
     expect(all.map &:id).to include('Plan One', 'Plan Two')
     expect(all.map &:amount).to include(54321, 98765)
+  end
+
+  it 'retrieves plans with limit' do
+    101.times do | i|
+      stripe_helper.create_plan(id: "Plan #{i}", amount: 11)
+    end
+    all = Stripe::Plan.all(limit: 100)
+
+    expect(all.count).to eq(100)
   end
 
 

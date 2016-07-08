@@ -6,12 +6,15 @@ end
 
 def it_behaves_like_stripe(&block)
   it_behaves_like 'Account API', &block
+  it_behaves_like 'Balance Transaction API', &block
   it_behaves_like 'Bank Account Token Mocking', &block
   it_behaves_like 'Card Token Mocking', &block
   it_behaves_like 'Card API', &block
   it_behaves_like 'Charge API', &block
+  it_behaves_like 'Bank API', &block
   it_behaves_like 'Coupon API', &block
   it_behaves_like 'Customer API', &block
+  it_behaves_like 'Dispute API', &block
   it_behaves_like 'Extra Features', &block
   it_behaves_like 'Invoice API', &block
   it_behaves_like 'Invoice Item API', &block
