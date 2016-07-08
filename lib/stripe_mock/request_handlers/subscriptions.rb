@@ -88,7 +88,11 @@ module StripeMock
           # coupon = assert_existence :coupon, coupon_id, coupons[coupon_id]
 
           coupon = Data.mock_coupon({ id: coupon_id })
-          subscription[:discount] = Stripe::Util.convert_to_stripe_object({ coupon: coupon }, {})
+          now = Time.zone.now
+          discount_start = now.to_i
+          discount_end = (now + (coupon.duration_in_months).months).to_i
+
+          subscription[:discount] = Stripe::Util.convert_to_stripe_object({ coupon: coupon }, { start: discount_start, end: discount_end})
         end
 
         assert_existence :plan, plan_name, plan
