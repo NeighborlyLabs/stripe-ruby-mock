@@ -7,6 +7,7 @@ module StripeMock
         klass.add_handler 'post /v1/subscriptions', :create_subscription
         klass.add_handler 'get /v1/subscriptions/(.*)', :retrieve_subscription
         klass.add_handler 'post /v1/subscriptions/(.*)', :update_subscription
+        klass.add_handler 'delete /v1/subscriptions/(.*)/discount', :delete_discount
         klass.add_handler 'delete /v1/subscriptions/(.*)', :cancel_subscription
 
         klass.add_handler 'post /v1/customers/(.*)/subscription(?:s)?', :create_customer_subscription
@@ -172,7 +173,11 @@ module StripeMock
 
           coupon = coupons[coupon_id]
           if coupon
-            subscription[:discount] = Stripe::Util.convert_to_stripe_object({ coupon: coupon }, {})
+            now = DateTime.now
+            discount_start = now
+            discount_end = (now >> (coupon[:duration_in_months]).to_i)
+
+            subscription[:discount] = Stripe::Util.convert_to_stripe_object({ coupon: coupon, start: discount_start.to_time.to_i, end: discount_end.to_time.to_i }, {})
           elsif coupon_id == ""
             subscription[:discount] = Stripe::Util.convert_to_stripe_object(nil, {})
           else
@@ -197,6 +202,12 @@ module StripeMock
         customer[:subscriptions][:data] << subscription
 
         subscription
+      end
+
+      def delete_discount(route, method_url, params, headers)
+        route =~ method_url
+        subscription = assert_existence :subscription, $1, subscriptions[$1]
+        subscription[:discount] = nil
       end
 
       def cancel_subscription(route, method_url, params, headers)
