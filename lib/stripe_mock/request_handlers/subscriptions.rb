@@ -191,7 +191,7 @@ module StripeMock
 
         subscription = assert_existence :subscription, test_subscription, subscriptions[test_subscription]
 
-        subscription.discount = nil
+        subscription[:discount] = nil
       end
 
       def cancel_subscription(route, method_url, params, headers)
