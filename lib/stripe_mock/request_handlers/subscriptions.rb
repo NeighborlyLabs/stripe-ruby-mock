@@ -8,6 +8,7 @@ module StripeMock
         klass.add_handler 'get /v1/subscriptions/(.*)', :retrieve_subscription
         klass.add_handler 'post /v1/customers/(.*)/subscriptions/(.*)', :update_subscription
         klass.add_handler 'delete /v1/subscriptions/(.*)', :cancel_subscription
+        klass.add_handler 'delete /v1/customers/(.*)/(.*)/discount', :delete_discount
 
         klass.add_handler 'post /v1/customers/(.*)/subscriptions', :create_customer_subscription
         klass.add_handler 'get /v1/customers/(.*)/subscriptions/(.*)', :retrieve_customer_subscription
@@ -181,6 +182,16 @@ module StripeMock
         customer[:subscriptions][:data] << subscription
 
         subscription
+      end
+
+      def delete_discount(route, method_url, params, headers)
+        route =~ method_url
+        test_subscription = $2
+        $2.slice! "/discount"
+
+        subscription = assert_existence :subscription, test_subscription, subscriptions[test_subscription]
+
+        subscription.discount = nil
       end
 
       def cancel_subscription(route, method_url, params, headers)
