@@ -15,6 +15,7 @@ module StripeMock
         klass.add_handler 'post /v1/customers/(.*)subscription(?:s)?/(.*)', :update_subscription
         klass.add_handler 'delete /v1/customers/(.*)/subscriptions/(.*)', :cancel_customer_subscription
         klass.add_handler 'delete /v1/customers/(.*)/subscriptions/(.*)/discount', :delete_customer_subscription_discount
+        klass.add_handler 'delete /v1/customers/(.*)/subscriptions/(.*)', :cancel_customer_subscription
         klass.add_handler 'post /v1/customers/(.*)/subscriptions/(.*)', :update_customer_subscription
         klass.add_handler 'delete /v1/customers/(.*)/subscription(?:s)?/(.*)', :cancel_subscription
       end
