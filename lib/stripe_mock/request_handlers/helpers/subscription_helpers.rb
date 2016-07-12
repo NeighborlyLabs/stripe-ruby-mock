@@ -27,6 +27,20 @@ module StripeMock
         params
       end
 
+      def add_coupon_to_subscription(coupon_id, subscription)
+        coupon = coupons[coupon_id]
+
+        if coupon
+          now = DateTime.now
+          discount_start = now
+          discount_end = (now >> (coupon[:duration_in_months]).to_i)
+
+          subscription[:discount] = Stripe::Util.convert_to_stripe_object({ coupon: coupon, start: discount_start.to_time.to_i, end: discount_end.to_time.to_i }, {})
+        else
+          raise Stripe::InvalidRequestError.new("No such coupon: #{coupon_id}", 'coupon', 400)
+        end
+      end
+
       def add_subscription_to_customer(cus, sub)
         if sub[:trial_end].nil? || sub[:trial_end] == "now"
           id = new_id('ch')
